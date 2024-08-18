@@ -1,11 +1,11 @@
 "use client";
 
 import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "./features/counter/counterSlice";
+import modalReducer from "./features/modal/OpenSlice";
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
+    open: modalReducer,
   },
 });
 
