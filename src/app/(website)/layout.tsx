@@ -64,7 +64,7 @@ export default function RootLayout({
         </nav>
       </header>
       {children}
-      <footer>Lorem, ipsum.</footer>
+      <footer className=" h-40 bg-black">Lorem, ipsum.</footer>
     </>
   );
 }

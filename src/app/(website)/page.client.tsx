@@ -30,6 +30,7 @@ import {
   TableBody,
   TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -37,6 +38,7 @@ import {
 
 import moment from "moment";
 import "moment/locale/es";
+import { toast } from "sonner";
 moment.locale("es");
 
 const chartData = [
@@ -63,9 +65,40 @@ const chartConfig = {
 
 const year = moment().format("YYYY");
 
+const tablaSchema = [
+  { month: "Enero", saving: 0, id: 1 },
+  { month: "Febrero", saving: 0, id: 2 },
+  { month: "Marzo", saving: 0, id: 3 },
+  { month: "Abril", saving: 0, id: 4 },
+  { month: "Mayo", saving: 0, id: 5 },
+  { month: "Junio", saving: 0, id: 6 },
+  { month: "Julio", saving: 0, id: 7 },
+  { month: "Agosto", saving: 0, id: 8 },
+  { month: "Septiembre", saving: 0, id: 9 },
+  { month: "Octubre", saving: 0, id: 10 },
+  { month: "Noviembre", saving: 0, id: 11 },
+  { month: "Diciembre", saving: 0, id: 12 },
+];
+
 const AppClient = () => {
+  const [tablaState, setTablaState] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const getTabla = localStorage.getItem("tabla") as string;
+      const tablaMatches = JSON.parse(getTabla);
+      if (!tablaMatches) {
+        localStorage.setItem("tabla", JSON.stringify(tablaSchema));
+
+        setTablaState(tablaSchema);
+      }
+
+      return setTablaState(tablaMatches);
+    }
+  }, []);
+
   return (
-    <main className="w-full min-h-screen container max-w-[30rem] py-8 px-5 flex flex-col gap-4">
+    <main className="w-full h-auto container max-w-[30rem] pt-8 pb-20 px-5 flex flex-col gap-20">
       <nav className="flex items-center justify-between">
         <h1 className="flex items-center gap-2 text-xl font-bold font-mono">
           <Box /> Ahorro objetivo
@@ -138,23 +171,34 @@ const AppClient = () => {
 
       <div>
         <Table>
-          <TableCaption>A list of your recent invoices.</TableCaption>
+          <TableCaption>
+            Visualiza tus ahorros de cada mes en esta tabla.
+          </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Invoice</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Mes</TableHead>
+              <TableHead className="text-right">Cantidad ahorrada</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell className="font-medium">INV001</TableCell>
-              <TableCell>Paid</TableCell>
-              <TableCell>Credit Card</TableCell>
-              <TableCell className="text-right">$250.00</TableCell>
-            </TableRow>
+            {tablaState?.map((item: any) => (
+              <TableRow
+                key={item.id}
+                onClick={() => toast(`${item.month} - ${item.saving}`)}
+              >
+                <TableCell>{item.month}</TableCell>
+                <TableCell className="text-right">
+                  {parseCurrency(Number(item.saving))}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell>item.month</TableCell>
+              <TableCell className="text-right">item.saving</TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </div>
     </main>
