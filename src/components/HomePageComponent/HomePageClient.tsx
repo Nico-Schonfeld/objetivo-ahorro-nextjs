@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { DollarSign } from "lucide-react";
+import { DollarSign, Pencil, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,6 +28,28 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Label as LabelUI } from "@/components/ui/label";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { parseCurrency } from "@/utils/formaterPrice/formaterPrice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import moment from "moment";
 import "moment/locale/es";
@@ -36,6 +58,32 @@ moment.locale("es");
 const HomePageClient = () => {
   const text = texts.layout.home;
   const year = moment().format("YYYY");
+  const [openModaObjetivo, setOpenModalObjetivo] =
+    React.useState<boolean>(false);
+
+  const getObjetivo =
+    typeof window !== "undefined" && localStorage.getItem("objetivo");
+  const objetivoValidate = JSON.parse(getObjetivo as string);
+  const objetivo = objetivoValidate ?? 0;
+  const objetivoResValidate = JSON.parse(getObjetivo as string);
+  const objetivoRes = objetivoResValidate ?? 0;
+
+  const getAhorro =
+    typeof window !== "undefined" && localStorage.getItem("ahorro");
+  const ahorroValidate = JSON.parse(getAhorro as string);
+  const ahorro = ahorroValidate ?? 0;
+
+  const getTabla =
+    typeof window !== "undefined" && localStorage.getItem("tabla");
+  const tablaa = JSON.parse(getTabla as string);
+
+  const [tabla, setTabla] = React.useState<
+    {
+      id: number;
+      mes: string;
+      ahorro: string;
+    }[]
+  >(tablaa ?? []);
 
   const meses = [
     {
@@ -86,17 +134,28 @@ const HomePageClient = () => {
   ];
 
   const chartData = [
-    { month: "Agosto", objetivo: 800000, ahorro: 150000, objetivoRes: 950000 },
+    {
+      month: "Agosto",
+      objetivo: Number(objetivo),
+      ahorro: Number(
+        tabla?.reduce((acumulador, ahorroActual) => {
+          const AhorroNumerico = parseFloat(ahorroActual.ahorro);
+          return acumulador + AhorroNumerico;
+        }, 0)
+      ),
+      objetivoRes: Number(objetivoRes),
+      restanteObj: Number(objetivo) - ahorro,
+    },
   ];
 
   const chartConfig = {
     objetivo: {
       label: "Objetivo",
-      color: "hsl(var(--chart-3))",
+      color: "hsl(var(--chart-2))",
     },
     ahorro: {
       label: "Ahorro",
-      color: "hsl(var(--chart-2))",
+      color: "hsl(var(--chart-3))",
     },
   } satisfies ChartConfig;
 
@@ -113,13 +172,106 @@ const HomePageClient = () => {
                   <CardTitle className="text-sm font-medium">
                     {item.id === 1 ? `${item.title} ${year}` : item.title}
                   </CardTitle>
+
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">$45,231.89</div>
-                  <p className="text-xs text-muted-foreground">
+                <CardContent className="relative ">
+                  <div className="flex items-center gap-4">
+                    <p className="text-2xl font-bold">
+                      {item.id === 0 && parseCurrency(Number(objetivo))}
+
+                      {item.id === 1 && tabla.length > 0
+                        ? parseCurrency(
+                            tabla?.reduce((acumulador, ahorroActual) => {
+                              const AhorroNumerico = parseFloat(
+                                ahorroActual.ahorro
+                              );
+                              return acumulador + AhorroNumerico;
+                            }, 0)
+                          )
+                        : parseCurrency(0)}
+
+                      {item.id === 2 &&
+                        parseCurrency(
+                          Number(objetivoRes) -
+                            tabla?.reduce((acumulador, ahorroActual) => {
+                              const AhorroNumerico = parseFloat(
+                                ahorroActual.ahorro
+                              );
+                              return acumulador + AhorroNumerico;
+                            }, 0)
+                        )}
+                    </p>
+                    {item.id === 0 && (
+                      <Dialog open={openModaObjetivo}>
+                        <DialogTrigger
+                          className="border rounded-lg p-1"
+                          onClick={() =>
+                            setOpenModalObjetivo(!openModaObjetivo)
+                          }
+                        >
+                          <Pencil width={16} height={16} />
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>
+                              Añade el monto de tu objetivo
+                            </DialogTitle>
+                            <DialogDescription className="flex flex-col gap-4 py-5">
+                              <form
+                                action={async (formData: FormData) => {
+                                  const objetivo = formData.get(
+                                    "objetivo"
+                                  ) as string;
+
+                                  if (!objetivo)
+                                    return toast.error("Campo obligatorio.");
+
+                                  if (typeof window !== "undefined") {
+                                    localStorage.setItem(
+                                      "objetivo",
+                                      JSON.stringify(objetivo)
+                                    );
+
+                                    setOpenModalObjetivo(!openModaObjetivo);
+                                    return toast.success("Success");
+                                  }
+                                }}
+                              >
+                                <LabelUI htmlFor="objetivo">Objetivo</LabelUI>
+                                <Input
+                                  type="text"
+                                  placeholder="650000"
+                                  name="objetivo"
+                                  id="objetivo"
+                                />
+
+                                <div className="flex items-center justify-end gap-4 w-full pt-4">
+                                  <Button
+                                    type="button"
+                                    variant={"destructive"}
+                                    onClick={() => {
+                                      typeof window !== "undefined" &&
+                                        localStorage.removeItem("objetivo");
+
+                                      setOpenModalObjetivo(false);
+                                    }}
+                                  >
+                                    eliminar
+                                  </Button>
+                                  <Button>Guardar</Button>
+                                </div>
+                              </form>
+                            </DialogDescription>
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
+
+                  {/* <p className="text-xs text-muted-foreground">
                     +20.1% from last month
-                  </p>
+                  </p> */}
                 </CardContent>
               </Card>
             ))}
@@ -180,7 +332,7 @@ const HomePageClient = () => {
                     />
                   </PolarRadiusAxis>
                   <RadialBar
-                    dataKey="objetivo"
+                    dataKey="objetivoObj"
                     stackId="a"
                     cornerRadius={5}
                     fill="var(--color-objetivo)"
@@ -209,8 +361,74 @@ const HomePageClient = () => {
         </div>
         <div>
           <Card>
-            <CardHeader>
+            <CardHeader className="relative">
               <CardTitle>Savings Tracker</CardTitle>
+
+              <Dialog>
+                <DialogTrigger className="absolute right-5 top-5 border rounded-lg p-1">
+                  <Plus width={24} height={24} />
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Añade el monto de tu objetivo</DialogTitle>
+                    <DialogDescription className="flex flex-col gap-4 py-5">
+                      <form
+                        action={async (formData: FormData) => {
+                          const getMes = formData.get("mes") as string;
+                          const getAhorro = formData.get("ahorro") as string;
+
+                          if (!getAhorro || !getMes) return toast.error("Err");
+
+                          setTabla([
+                            ...tabla,
+                            {
+                              id: tabla.length + 1,
+                              ahorro: getAhorro,
+                              mes: getMes,
+                            },
+                          ]);
+
+                          if (tabla.length > 0) {
+                            typeof window !== "undefined" &&
+                              localStorage.setItem(
+                                "tabla",
+                                JSON.stringify(tabla)
+                              );
+                          }
+                        }}
+                      >
+                        <LabelUI>
+                          Mes 2024
+                          <Select name="mes">
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Mes del 2024" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {meses.map((mes) => (
+                                <SelectItem key={mes.id} value={mes.mes}>
+                                  {mes.mes}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </LabelUI>
+
+                        <LabelUI>
+                          Cantidad ahorrada
+                          <Input type="text" placeholder="500" name="ahorro" />
+                        </LabelUI>
+
+                        <div className="flex items-center justify-end gap-4 w-full pt-4">
+                          <Button type="button" variant={"destructive"}>
+                            eliminar
+                          </Button>
+                          <Button>Guardar</Button>
+                        </div>
+                      </form>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
               <Table>
@@ -221,15 +439,30 @@ const HomePageClient = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>Enero</TableCell>
-                    <TableCell>$500</TableCell>
-                  </TableRow>
+                  {tabla?.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.mes}</TableCell>
+                      <TableCell>
+                        {parseCurrency(Number(item.ahorro))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
                 <TableFooter>
                   <TableRow>
                     <TableCell className="font-semibold">Total</TableCell>
-                    <TableCell className="font-semibold">$500</TableCell>
+                    <TableCell className="font-semibold">
+                      {tabla.length <= 0
+                        ? parseCurrency(0)
+                        : parseCurrency(
+                            tabla?.reduce((acumulador, ahorroActual) => {
+                              const AhorroNumerico = parseFloat(
+                                ahorroActual.ahorro
+                              );
+                              return acumulador + AhorroNumerico;
+                            }, 0)
+                          )}
+                    </TableCell>
                   </TableRow>
                 </TableFooter>
               </Table>

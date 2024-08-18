@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import ReduxProvider from "@/redux/provider";
 import { ViewTransitions } from "next-view-transitions";
 import moment from "moment";
-
+import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 const year = moment().format("YYYY");
@@ -26,11 +26,13 @@ export default function RootLayout({
         <body className={inter.className}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
-            <ReduxProvider>{children}</ReduxProvider>
+            <ReduxProvider>
+              {children} <Toaster />
+            </ReduxProvider>
           </ThemeProvider>
         </body>
       </html>
