@@ -1,4 +1,4 @@
-import SigninClient from "@/app/(website)/auth/signin/page.client";
+import SigninClient from "./page.client";
 
 const Signin = () => {
   return <SigninClient />;

@@ -1,11 +1,7 @@
-import HomePage from "@/components/HomePageComponent/HomePage";
+import AppClient from "./page.client";
 
 const AppContainer = () => {
-  return (
-    <>
-      <HomePage />
-    </>
-  );
+  return <AppClient />;
 };
 
 export default AppContainer;
